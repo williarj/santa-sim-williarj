@@ -1,6 +1,8 @@
 package santa.simulator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -28,6 +30,7 @@ public class Simulation {
     private final SamplingSchedule samplingSchedule;
 
     private final Population population;
+    private final HashMap<Integer, Population> populationList;
 
 	public enum InoculumType {
 		NONE,
@@ -53,7 +56,39 @@ public class Simulation {
         this.genePool = genePool;
         this.selector = selector;
 
-        population = new Population(genePool, selector, growth, samplingSchedule.isSamplingTrees() ? new Phylogeny(populationSize) : null);
+        this.population = new Population(genePool, selector, growth, samplingSchedule.isSamplingTrees() ? new Phylogeny(populationSize) : null);
+        this.populationList = null;//TODO: remove this simplify constructor to just hashmap version
+    }
+
+    /*
+    * Constructor for use when simulating multiple populations.
+    */
+    public Simulation (
+            int populationSize,
+            Selector selector,
+            PopulationGrowth growth,
+            InoculumType inoculumType,
+            GenePool genePool,
+            List<SimulationEpoch> epochs,
+            SamplingSchedule samplingSchedule,
+            int numPops) {
+
+        this.populationSize = populationSize;
+        this.inoculumType = inoculumType;
+        this.epochs = epochs;
+        this.samplingSchedule = samplingSchedule;
+        this.genePool = genePool;
+        this.selector = selector;
+
+        this.population = null;
+        this.populationList = new HashMap<Integer, Population>();
+        int popID = 0;//TODO: change this to a string ID provided by the user
+        Population population;
+        while (popID < numPops){
+            population = new Population(genePool, selector, growth, samplingSchedule.isSamplingTrees() ? new Phylogeny(populationSize) : null);
+            this.populationList.put(popID, population);
+            popID++;
+        }
     }
     
     public void run(int replicate, Logger logger) {
@@ -79,7 +114,15 @@ public class Simulation {
 	    } else { // NONE
 		    // do nothing
 	    }
-        population.initialize(inoculum, populationSize);
+
+        //check if we are running one or several populations // TODO: maybe just simplify and make everything use the HashMap version
+        if(this.populationList == null){
+            population.initialize(inoculum, populationSize);
+        } else{ //multiple population mode
+            this.populationList.forEach((popID, population) -> {
+                population.initialize(inoculum, populationSize);//TODO: this is assuming all pops have the same size
+            });
+        }
 
         int generation = 1;
 
@@ -89,10 +132,18 @@ public class Simulation {
             EventLogger.setEpoch(epochCount);
 
             generation = epoch.run(this, logger, generation);
-            if(population.getCurrentGeneration().size() == 0) {
-            	System.err.println("Population crashed after "+generation+" generations.");
-            	return;
+            if(population != null && population.getCurrentGeneration().isEmpty()) {
+                System.err.println("Population crashed after "+generation+" generations.");
+                return;
+            } else {
+                for(int popID : populationList.keySet()){
+                    if(getPopulationByID(popID).getCurrentGeneration().isEmpty()){
+                        System.err.println("Population " + popID + " crashed after "+generation+" generations.");
+                        return;
+                    }
+                }
             }
+
             epochCount++;
         }
         samplingSchedule.cleanUp();
@@ -106,6 +157,22 @@ public class Simulation {
         return population;
     }
 
+    public Population getPopulationByID(int id){
+        if(this.populationList != null){
+            Population pop = this.populationList.get(id);
+            if(pop == null){
+                System.err.println("Attempt to access unknown population with ID: "+id+" .");
+                System.exit(0);//TODO: should this be a different error code?
+            }
+            return pop;
+        }
+        return this.getPopulation();//return when only one pop exists
+    }
+
+    public Set<Integer> getPopulationIDs(){
+        return populationList.keySet();
+    }
+
     public int getPopulationSize() {
         return populationSize;
     }
@@ -113,4 +180,5 @@ public class Simulation {
     public SamplingSchedule getSamplingSchedule() {
         return samplingSchedule;
     }
+
 }

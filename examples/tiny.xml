@@ -1,0 +1,76 @@
+<santa xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="santa.xsd">
+	<replicates>1</replicates>
+
+	<simulation>
+
+		<genome>
+			<length>9</length>
+			<sequences>
+				GAAGAAGAG
+			</sequences>
+			<feature>
+				<name>CDS</name>
+				<type>aminoAcid</type>
+				<coordinates>1-9</coordinates>
+			</feature>
+		</genome>
+
+		<population>
+			<populationSize>1000</populationSize>
+
+			<inoculum>all</inoculum>
+		</population>
+
+		<fitnessFunction>
+            <neutralFitness>
+                <sites>1-9</sites>
+            </neutralFitness>
+			<purifyingFitness>
+				<feature>CDS</feature>
+			    <sites>1</sites>
+				<rank>
+					<order>observed</order>
+					<probableSet>2</probableSet>
+					<breakTies>random</breakTies>
+				</rank>
+				<fitness>
+					<lowFitness>0.1</lowFitness>
+					<minimumFitness>0.1</minimumFitness>
+				</fitness>
+
+			</purifyingFitness>
+		</fitnessFunction>
+
+		<mutator>
+			<nucleotideMutator>
+				<mutationRate>1.0E-4</mutationRate>
+				<transitionBias>2.0</transitionBias>
+			</nucleotideMutator>
+		</mutator>
+
+		<replicator>
+			<clonalReplicator/>
+		</replicator>
+
+        <epoch>
+            <generationCount>1001</generationCount>
+        </epoch>
+
+        <samplingSchedule>
+<!--
+			<sampler>
+				<atGeneration>10000</atGeneration>
+				<fileName>trees_%r.tree</fileName>
+				<tree>
+					<sampleSize>5</sampleSize>
+					<format>NEXUS</format>
+					<label>tip_%g_%s</label>
+				</tree>
+			</sampler>
+-->
+		</samplingSchedule>
+
+	</simulation>
+
+</santa>

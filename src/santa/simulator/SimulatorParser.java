@@ -444,7 +444,7 @@ public class SimulatorParser {
 		if (populationType.equals(STATIC_POPULATION)) {
 			Selector selector = new BinarySearchSelector();
 			PopulationGrowth growth = new StaticPopulationGrowth(populationSize);
-			return new  Simulation(populationSize, selector, growth, inoculumType, genePool, epochs, samplingSchedule);
+			return new  Simulation(populationSize, selector, growth, inoculumType, genePool, epochs, samplingSchedule, 2);//TODO hardcoded 2 pops
 		} else if (populationType.equals(DYNAMIC_POPULATION)) {
 			PopulationGrowth growth = new DynamicPopulationGrowth();
 			Selector selector = null;
@@ -454,7 +454,7 @@ public class SimulatorParser {
 		    	selector = dynamicSelector;
 		    }
 		    	
-		    return new Simulation(populationSize, selector, growth, inoculumType, genePool, epochs, samplingSchedule);
+		    return new Simulation(populationSize, selector, growth, inoculumType, genePool, epochs, samplingSchedule, 2); //TODO hardcoded 2 pops
 		}
 		else throw new ParseException("unrecognized population type. should be either staticPopulation or dynamicPopulation.");
 		
